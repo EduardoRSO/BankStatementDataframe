@@ -14,7 +14,10 @@ class PDFExtractor:
 
         # Configurando o logger para a classe
         self.logger = logging.getLogger("PDFExtractor")
-        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+        # Desabilitar logs de debug de bibliotecas externas
+        logging.getLogger("PyPDF2").setLevel(logging.WARNING)
 
     def extract_text(self) -> str:
         """
@@ -27,7 +30,7 @@ class PDFExtractor:
             with open(self.pdf_path, "rb") as file:
                 reader = PyPDF2.PdfReader(file)
                 num_pages = len(reader.pages)  # Obter o número total de páginas
-                self.logger.debug(f"Total de páginas no PDF: {num_pages}")
+                self.logger.info(f"Total de páginas no PDF: {num_pages}")
                 
                 # Percorre todas as páginas do PDF
                 for page_num in range(num_pages):
@@ -57,6 +60,6 @@ class PDFExtractor:
         try:
             with open(output_path, "w", encoding="utf-8") as file:
                 file.write(self.text)
-            self.logger.debug(f"Texto salvo em: {output_path}")
+            self.logger.info(f"Texto salvo em: {output_path}")
         except Exception as e:
             self.logger.error(f"Erro ao salvar o texto: {e}")
