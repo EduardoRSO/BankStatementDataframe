@@ -69,9 +69,9 @@ class TestPDFExtractor(unittest.TestCase):
         self.logger.debug(f"Arquivo de saída criado: {file_exists}")
         self.assertTrue(file_exists, "Arquivo de saída não foi criado.")
 
-        # Verifica se o conteúdo do arquivo é o esperado
+        # Verifica se o conteúdo do arquivo é o esperado (lendo o arquivo com UTF-8)
         if file_exists:
-            with open(output_path, "r") as f:
+            with open(output_path, "r", encoding="utf-8") as f:
                 saved_text = f.read()
             self.logger.debug(f"Conteúdo salvo: {saved_text}")
             self.assertEqual(saved_text.strip(), self.test_text, "Texto salvo no arquivo não corresponde ao texto extraído.")
