@@ -13,7 +13,7 @@ class PDFExtractor:
 
     def extract_text(self) -> str:
         """
-        Extrai o texto do PDF especificado no pdf_path.
+        Extrai o texto de todas as páginas do PDF especificado no pdf_path.
 
         Returns:
         - str: Texto extraído do PDF.
@@ -21,11 +21,18 @@ class PDFExtractor:
         try:
             with open(self.pdf_path, "rb") as file:
                 reader = PyPDF2.PdfReader(file)
-                for page_num in range(len(reader.pages)):
-                    page_text = reader.pages[page_num].extract_text()
+                num_pages = len(reader.pages)  # Obter o número total de páginas
+                print(f"Total de páginas no PDF: {num_pages}")
+                
+                # Percorre todas as páginas do PDF
+                for page_num in range(num_pages):
+                    page = reader.pages[page_num]
+                    page_text = page.extract_text()  # Extraindo texto da página
                     if page_text:
-                        # Certifique-se de que o texto extraído seja tratado como utf-8
-                        self.text += page_text.encode('utf-8').decode('utf-8')
+                        self.text += page_text  # Adiciona o texto da página
+                    else:
+                        print(f"A página {page_num + 1} não contém texto extraído.")
+            
             return self.text
         except Exception as e:
             print(f"Erro ao extrair texto do PDF: {e}")
