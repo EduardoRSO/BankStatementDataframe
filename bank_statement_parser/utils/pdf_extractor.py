@@ -2,15 +2,17 @@ import PyPDF2
 import logging
 
 class PDFExtractor:
-    def __init__(self, pdf_path: str):
+    def __init__(self, pdf_path: str, password_list=None):
         """
         Classe responsável pela extração de texto de arquivos PDF.
-        
+
         Args:
         - pdf_path (str): Caminho do arquivo PDF.
+        - password_list (list): Lista de senhas para tentar desbloquear o PDF.
         """
         self.pdf_path = pdf_path
         self.text = ""
+        self.password_list = password_list if password_list else []
 
         # Configurando o logger para a classe
         self.logger = logging.getLogger("PDFExtractor")
@@ -18,6 +20,45 @@ class PDFExtractor:
 
         # Desabilitar logs de debug de bibliotecas externas
         logging.getLogger("PyPDF2").setLevel(logging.WARNING)
+
+        # Remover a senha se o PDF estiver protegido
+        self.remove_pdf_password()
+
+    def remove_pdf_password(self):
+        """
+        Remove a senha do PDF, caso esteja protegido, e salva o arquivo sem senha no mesmo caminho.
+        """
+        try:
+            with open(self.pdf_path, "rb") as input_file:
+                reader = PyPDF2.PdfReader(input_file)
+
+                # Verifica se o PDF está criptografado
+                if reader.is_encrypted:
+                    self.logger.info(f"O PDF está protegido por senha. Tentando desbloquear: {self.pdf_path}")
+
+                    # Tentar todas as senhas fornecidas
+                    for password in self.password_list:
+                        if reader.decrypt(password) == 1:  # Senha correta
+                            self.logger.info(f"Senha correta encontrada: {password}")
+                            break
+                    else:
+                        raise ValueError("Nenhuma senha fornecida é válida para este PDF.")
+
+                    # Criar um novo PDF sem senha
+                    writer = PyPDF2.PdfWriter()
+                    for page_num in range(len(reader.pages)):
+                        writer.add_page(reader.pages[page_num])
+
+                    # Salvar o arquivo sem senha no mesmo caminho
+                    with open(self.pdf_path, "wb") as output_file:
+                        writer.write(output_file)
+
+                    self.logger.info(f"PDF salvo sem senha: {self.pdf_path}")
+                else:
+                    self.logger.info(f"O PDF já está sem senha: {self.pdf_path}")
+
+        except Exception as e:
+            self.logger.error(f"Erro ao remover a senha do PDF: {e}")
 
     def extract_text(self) -> str:
         """
