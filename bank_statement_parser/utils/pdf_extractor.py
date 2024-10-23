@@ -2,6 +2,9 @@ import PyPDF2
 import logging
 
 class PDFExtractor:
+    USER_PASSWORD = 1
+    OWNER_PASSWORD = 2
+
     def __init__(self, pdf_path: str, password_list=None):
         """
         Classe responsável pela extração de texto de arquivos PDF.
@@ -38,7 +41,8 @@ class PDFExtractor:
 
                     # Tentar todas as senhas fornecidas
                     for password in self.password_list:
-                        if reader.decrypt(password) == 1:  # Senha correta
+                        result = reader.decrypt(password)
+                        if result == self.USER_PASSWORD or result == self.OWNER_PASSWORD:
                             self.logger.info(f"Senha correta encontrada: {password}")
                             break
                     else:
