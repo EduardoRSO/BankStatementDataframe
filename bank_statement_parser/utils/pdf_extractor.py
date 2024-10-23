@@ -22,7 +22,10 @@ class PDFExtractor:
             with open(self.pdf_path, "rb") as file:
                 reader = PyPDF2.PdfReader(file)
                 for page_num in range(len(reader.pages)):
-                    self.text += reader.pages[page_num].extract_text()
+                    page_text = reader.pages[page_num].extract_text()
+                    if page_text:
+                        # Certifique-se de que o texto extraído seja tratado como utf-8
+                        self.text += page_text.encode('utf-8').decode('utf-8')
             return self.text
         except Exception as e:
             print(f"Erro ao extrair texto do PDF: {e}")
