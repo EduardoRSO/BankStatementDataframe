@@ -1,5 +1,8 @@
 import PyPDF2
 import logging
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+import io
 
 class PDFExtractor:
     USER_PASSWORD = 1
@@ -48,16 +51,30 @@ class PDFExtractor:
                     else:
                         raise ValueError("Nenhuma senha fornecida é válida para este PDF.")
 
-                    # Criar um novo PDF sem senha
-                    writer = PyPDF2.PdfWriter()
+                    # Extrair todo o texto do PDF
+                    extracted_text = ""
                     for page_num in range(len(reader.pages)):
-                        writer.add_page(reader.pages[page_num])
+                        page = reader.pages[page_num]
+                        page_text = page.extract_text()
+                        if page_text:
+                            extracted_text += page_text.strip() + "\n"
 
-                    # Salvar o arquivo sem senha no mesmo caminho
-                    with open(self.pdf_path, "wb") as output_file:
-                        writer.write(output_file)
+                    # Salvar o arquivo descriptografado com o sufixo _descriptografado.pdf
+                    new_pdf_path = self.pdf_path.replace(".PDF", "_descriptografado.pdf").replace(".pdf", "_descriptografado.pdf")
 
-                    self.logger.info(f"PDF salvo sem senha: {self.pdf_path}")
+                    packet = io.BytesIO()
+                    can = canvas.Canvas(packet, pagesize=letter)
+
+                    # Adicionar o texto completo ao PDF
+                    can.drawString(10, 750, extracted_text)
+                    can.save()
+
+                    # Salvar o PDF no arquivo
+                    with open(new_pdf_path, "wb") as output_file:
+                        output_file.write(packet.getvalue())
+
+                    self.logger.info(f"PDF salvo sem senha com o texto completo: {new_pdf_path}")
+
                 else:
                     self.logger.info(f"O PDF já está sem senha: {self.pdf_path}")
 
