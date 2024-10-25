@@ -14,17 +14,18 @@ class Parser(ABC):
     Define a interface comum para os métodos de extração de dados.
     """
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, password_list=None):
         self.file_path = file_path
+        self.password_list = password_list if password_list else []  # Lista de senhas
 
         # Configuração do logger
         self.logger = logging.getLogger(self.__class__.__name__)
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
         
-        # Instância do PDFExtractor
-        self.pdf_extractor = PDFExtractor(file_path)
+        # Instância do PDFExtractor com a lista de senhas
+        self.pdf_extractor = PDFExtractor(file_path, self.password_list)
         
-        # Extrai o texto do PDF
+        # Extrai o texto do PDF usando as senhas fornecidas
         self.text = self.pdf_extractor.extract_text()
         
         # Define o caminho do arquivo de saída na pasta 'resultados'
@@ -48,16 +49,16 @@ class ParserFactory:
     """
     
     @staticmethod
-    def get_parser(file_path):
+    def get_parser(file_path, password_list=None):
         file_name = os.path.basename(file_path).lower()
 
         if "caixa" in file_name:
-            return CaixaParser(file_path)
+            return CaixaParser(file_path, password_list)
         elif "bradesco" in file_name:
-            return BradescoParser(file_path)
+            return BradescoParser(file_path, password_list)
         elif "carrefour" in file_name:
-            return CarrefourParser(file_path)
+            return CarrefourParser(file_path, password_list)
         elif "itau" in file_name:
-            return ItauParser(file_path)
+            return ItauParser(file_path, password_list)
         else:
             raise ValueError(f"Nenhum parser disponível para o arquivo: {file_name}")
