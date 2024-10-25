@@ -2,10 +2,6 @@ import os
 import logging
 import regex as re
 from abc import ABC, abstractmethod
-from formats.itau import ItauParser
-from formats.caixa import CaixaParser
-from formats.bradesco import BradescoParser
-from formats.carrefour import CarrefourParser
 from bank_statement_parser.utils.pdf_extractor import PDFExtractor
 
 class Parser(ABC):
@@ -42,23 +38,3 @@ class Parser(ABC):
         Método abstrato para extrair dados do extrato.
         """
         pass
-
-class ParserFactory:
-    """
-    Fábrica para selecionar o parser correto com base no nome do arquivo.
-    """
-    
-    @staticmethod
-    def get_parser(file_path, password_list=None):
-        file_name = os.path.basename(file_path).lower()
-
-        if "caixa" in file_name:
-            return CaixaParser(file_path, password_list)
-        elif "bradesco" in file_name:
-            return BradescoParser(file_path, password_list)
-        elif "carrefour" in file_name:
-            return CarrefourParser(file_path, password_list)
-        elif "itau" in file_name:
-            return ItauParser(file_path, password_list)
-        else:
-            raise ValueError(f"Nenhum parser disponível para o arquivo: {file_name}")
