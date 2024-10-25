@@ -34,7 +34,7 @@ class PDFExtractor:
                         raise ValueError("Nenhuma senha fornecida é válida para este PDF.")
                     
                     # Salva o PDF sem senha com o sufixo "_descriptografado.pdf"
-                    new_pdf_path = self.pdf_path.replace(".PDF", "_descriptografado.pdf").replace(".pdf", "_descriptografado.pdf")
+                    new_pdf_path = self.pdf_path.replace(".PDF", "_descriptografado.pdf")
                     writer = PyPDF2.PdfWriter()
                     for page in reader.pages:
                         writer.add_page(page)
