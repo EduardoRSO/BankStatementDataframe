@@ -1,11 +1,7 @@
-import unittest
 import os
+import unittest
 from PyPDF2 import PdfWriter
-from bank_statement_parser.formats.parser import ParserFactory
-from bank_statement_parser.formats.caixa import CaixaParser
-from bank_statement_parser.formats.bradesco import BradescoParser
-from bank_statement_parser.formats.carrefour import CarrefourParser
-from bank_statement_parser.formats.itau import ItauParser
+from bank_statement_parser.formats.parser_factory import ParserFactory, ItauParser, CaixaParser, BradescoParser, CarrefourParser
 
 class TestParserFactory(unittest.TestCase):
 
@@ -24,7 +20,7 @@ class TestParserFactory(unittest.TestCase):
         # Cria cada arquivo PDF com a senha e o texto de teste
         for file_name, password in self.files.items():
             writer = PdfWriter()
-            writer.add_blank_page()
+            writer.add_blank_page(width=595.28, height=841.89)
             writer.encrypt(password)
             
             # Adiciona uma página com o texto de teste
@@ -44,7 +40,7 @@ class TestParserFactory(unittest.TestCase):
                 "carrefour_extrato.pdf": CarrefourParser,
                 "itau_extrato.pdf": ItauParser
             }[file_name]
-            
+
             # Verifica se o parser correto foi instanciado
             self.assertIsInstance(parser, expected_parser_class)
             # Verifica se o texto extraído é o esperado

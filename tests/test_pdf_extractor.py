@@ -91,7 +91,7 @@ class TestPDFExtractor(unittest.TestCase):
         
         # Cria um PDF protegido por senha
         writer = PdfWriter()
-        writer.add_page(writer.add_blank_page())
+        writer.add_page(writer.add_blank_page(width=595.28, height=841.89))
         writer.encrypt(test_password)
         with open(protected_pdf_path, "wb") as f:
             writer.write(f)
