@@ -1,6 +1,7 @@
 import PyPDF2
 import logging
 import pdfplumber
+import os
 
 class PDFExtractor:
     USER_PASSWORD = 1
@@ -10,6 +11,7 @@ class PDFExtractor:
         self.pdf_path = pdf_path
         self.text = ""
         self.password_list = password_list if password_list else []
+        self.decrypted_file_created = False  # Booleano para indicar se um arquivo descriptografado foi criado
 
         # Configuração do logger
         self.logger = logging.getLogger("PDFExtractor")
@@ -43,6 +45,7 @@ class PDFExtractor:
 
                     self.logger.info(f"PDF salvo sem senha: {new_pdf_path}")
                     self.pdf_path = new_pdf_path
+                    self.decrypted_file_created = True  # Indica que o arquivo descriptografado foi criado
                 else:
                     self.logger.info(f"O PDF já está sem senha: {self.pdf_path}")
         except Exception as e:
@@ -101,3 +104,17 @@ class PDFExtractor:
             self.logger.info(f"Texto salvo em: {output_path}")
         except Exception as e:
             self.logger.error(f"Erro ao salvar o texto: {e}")
+        finally:
+            # Chama o método para remover o arquivo descriptografado, se necessário
+            self.remove_decrypted_file()
+
+    def remove_decrypted_file(self):
+        """
+        Remove o arquivo descriptografado, se ele foi criado.
+        """
+        if self.decrypted_file_created and os.path.exists(self.pdf_path):
+            try:
+                os.remove(self.pdf_path)
+                self.logger.info(f"Arquivo descriptografado removido: {self.pdf_path}")
+            except Exception as e:
+                self.logger.error(f"Erro ao remover o arquivo descriptografado: {e}")
