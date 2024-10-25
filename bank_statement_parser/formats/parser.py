@@ -1,9 +1,12 @@
 import os
+import logging
+import regex as re
 from abc import ABC, abstractmethod
 from formats.itau import ItauParser
 from formats.caixa import CaixaParser
 from formats.bradesco import BradescoParser
 from formats.carrefour import CarrefourParser
+from bank_statement_parser.utils.pdf_extractor import PDFExtractor
 
 class Parser(ABC):
     """
@@ -13,6 +16,24 @@ class Parser(ABC):
 
     def __init__(self, file_path):
         self.file_path = file_path
+
+        # Configuração do logger
+        self.logger = logging.getLogger(self.__class__.__name__)
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        
+        # Instância do PDFExtractor
+        self.pdf_extractor = PDFExtractor(file_path)
+        
+        # Extrai o texto do PDF
+        self.text = self.pdf_extractor.extract_text()
+        
+        # Define o caminho do arquivo de saída na pasta 'resultados'
+        output_dir = "resultados"
+        os.makedirs(output_dir, exist_ok=True)  # Cria a pasta se não existir
+        output_path = os.path.join(output_dir, os.path.basename(file_path).replace(".pdf", "_texto_extraido.txt"))
+
+        # Salva o texto extraído em um arquivo na pasta 'resultados'
+        self.pdf_extractor.save_text_to_file(output_path)
 
     @abstractmethod
     def extract_data(self):
