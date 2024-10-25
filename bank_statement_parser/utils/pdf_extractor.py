@@ -1,45 +1,30 @@
 import PyPDF2
 import logging
+import pdfplumber
 
 class PDFExtractor:
     USER_PASSWORD = 1
     OWNER_PASSWORD = 2
 
     def __init__(self, pdf_path: str, password_list=None):
-        """
-        Classe responsável pela extração de texto de arquivos PDF.
-
-        Args:
-        - pdf_path (str): Caminho do arquivo PDF.
-        - password_list (list): Lista de senhas para tentar desbloquear o PDF.
-        """
         self.pdf_path = pdf_path
         self.text = ""
         self.password_list = password_list if password_list else []
 
-        # Configurando o logger para a classe
+        # Configuração do logger
         self.logger = logging.getLogger("PDFExtractor")
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-        # Desabilitar logs de debug de bibliotecas externas
         logging.getLogger("PyPDF2").setLevel(logging.WARNING)
 
         # Remover a senha se o PDF estiver protegido
         self.remove_pdf_password()
 
     def remove_pdf_password(self):
-        """
-        Remove a senha do PDF, caso esteja protegido, e salva o arquivo sem senha com o sufixo '_descriptografado.pdf'.
-        """
         try:
             with open(self.pdf_path, "rb") as input_file:
                 reader = PyPDF2.PdfReader(input_file)
-
-                # Verifica se o PDF está criptografado
                 if reader.is_encrypted:
                     self.logger.info(f"O PDF está protegido por senha. Tentando desbloquear: {self.pdf_path}")
-
-                    # Tentar todas as senhas fornecidas
                     for password in self.password_list:
                         result = reader.decrypt(password)
                         if result == self.USER_PASSWORD or result == self.OWNER_PASSWORD:
@@ -47,30 +32,25 @@ class PDFExtractor:
                             break
                     else:
                         raise ValueError("Nenhuma senha fornecida é válida para este PDF.")
-
-                    # Criar um novo arquivo PDF sem senha
-                    self.pdf_path = self.pdf_path.replace(".PDF", "_descriptografado.pdf")
+                    
+                    # Salva o PDF sem senha com o sufixo "_descriptografado.pdf"
+                    new_pdf_path = self.pdf_path.replace(".PDF", "_descriptografado.pdf").replace(".pdf", "_descriptografado.pdf")
                     writer = PyPDF2.PdfWriter()
-
-                    # Adicionar todas as páginas ao novo PDF sem senha
-                    for page_num in range(len(reader.pages)):
-                        writer.add_page(reader.pages[page_num])
-
-                    # Salvar o PDF descriptografado
-                    with open(self.pdf_path, "wb") as output_file:
+                    for page in reader.pages:
+                        writer.add_page(page)
+                    with open(new_pdf_path, "wb") as output_file:
                         writer.write(output_file)
 
-                    self.logger.info(f"PDF salvo sem senha: {self.pdf_path}")
-
+                    self.logger.info(f"PDF salvo sem senha: {new_pdf_path}")
+                    self.pdf_path = new_pdf_path
                 else:
                     self.logger.info(f"O PDF já está sem senha: {self.pdf_path}")
-
         except Exception as e:
             self.logger.error(f"Erro ao remover a senha do PDF: {e}")
 
     def extract_text(self) -> str:
         """
-        Extrai o texto de todas as páginas do PDF especificado no pdf_path.
+        Extrai o texto de todas as páginas do PDF, usando pdfplumber caso PyPDF2 falhe.
 
         Returns:
         - str: Texto extraído do PDF.
@@ -78,22 +58,31 @@ class PDFExtractor:
         try:
             with open(self.pdf_path, "rb") as file:
                 reader = PyPDF2.PdfReader(file)
-                num_pages = len(reader.pages)  # Obter o número total de páginas
+                num_pages = len(reader.pages)
                 self.logger.info(f"Total de páginas no PDF: {num_pages}")
                 
-                # Percorre todas as páginas do PDF
-                for page_num in range(num_pages):
-                    page = reader.pages[page_num]
-                    page_text = page.extract_text()  # Extraindo texto da página
+                for page_num, page in enumerate(reader.pages):
+                    page_text = page.extract_text()
                     if page_text:
-                        self.text += page_text  # Adiciona o texto da página
+                        self.text += page_text
                     else:
                         self.logger.warning(f"A página {page_num + 1} não contém texto extraído.")
             
             return self.text
         except Exception as e:
-            self.logger.error(f"Erro ao extrair texto do PDF: {e}")
-            return ""
+            self.logger.error(f"Erro ao extrair texto com PyPDF2: {e}")
+            self.logger.info("Tentando extrair o texto com pdfplumber...")
+
+            # Tentativa com pdfplumber
+            try:
+                with pdfplumber.open(self.pdf_path) as pdf:
+                    for page in pdf.pages:
+                        self.text += page.extract_text() or ""
+                self.logger.info("Texto extraído com sucesso usando pdfplumber.")
+                return self.text
+            except Exception as e:
+                self.logger.error(f"Erro ao extrair texto com pdfplumber: {e}")
+                return ""
 
     def save_text_to_file(self, output_path: str):
         """
