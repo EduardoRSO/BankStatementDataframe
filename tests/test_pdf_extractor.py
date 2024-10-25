@@ -1,6 +1,7 @@
 import unittest
 import os
 import logging
+from PyPDF2 import PdfWriter
 from bank_statement_parser.utils.pdf_extractor import PDFExtractor
 from reportlab.pdfgen import canvas
 
@@ -80,6 +81,29 @@ class TestPDFExtractor(unittest.TestCase):
             if os.path.exists(output_path):
                 self.logger.debug(f"Removendo arquivo de saída: {output_path}")
                 os.remove(output_path)
+
+    def test_pdf_extractor_with_password(self):
+        """
+        Testa se o PDFExtractor consegue extrair o texto de um PDF protegido com a senha correta.
+        """
+        protected_pdf_path = "test_password_protected.pdf"
+        test_password = "12345"
+        
+        # Cria um PDF protegido por senha
+        writer = PdfWriter()
+        writer.add_page(writer.add_blank_page())
+        writer.encrypt(test_password)
+        with open(protected_pdf_path, "wb") as f:
+            writer.write(f)
+
+        # Testa a extração de texto com a senha correta
+        pdf_extractor = PDFExtractor(protected_pdf_path, password_list=[test_password])
+        extracted_text = pdf_extractor.extract_text()
+        self.assertIsInstance(extracted_text, str)  # Certifica-se de que algum texto é retornado
+
+        # Remove o arquivo protegido por senha após o teste
+        if os.path.exists(protected_pdf_path):
+            os.remove(protected_pdf_path)
 
 if __name__ == "__main__":
     unittest.main()
