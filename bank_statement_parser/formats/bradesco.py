@@ -32,6 +32,7 @@ class BradescoParser(Parser):
         super().__init__(file_path, password_list)
         self.extract_data()
         self.transform_to_dataframe()
+        self.save_transformed_dataframe(self.transformed_data)
 
 
     def extract_data(self):
