@@ -1,31 +1,32 @@
-import pandas as pd
 import re
+import pandas as pd
+from datetime import datetime
 from bank_statement_parser.formats.parser import Parser
 
 class ItauParser(Parser):
-    PATTERN = r'^\d{2}/\d{2} .*?\d+$'
+    PATTERN = r'^\d{2}/\d{2}$'
     RECEITAS_CATEGORIAS = [
         'Salários e Rendimentos', 'Investimentos', 'Freelances e Serviços', 
         'Aluguéis Recebidos', 'Reembolsos e Reversões', 'Prêmios e Concursos', 'Outros Créditos'
     ]
-    SALARIOS_RENDIMENTOS = ['salário', 'rendimentos', 'benefício', 'bonus', 'salario']
-    INVESTIMENTOS = ['investimento', 'juros', 'dividendo', 'ações', 'ganho capital']
-    FREELANCES_SERVICOS = ['freelance', 'serviço', 'consultoria']
-    ALUGUEIS_RECEBIDOS = ['aluguel', 'renda locação']
-    REEMBOLSOS_REVERSOES = ['reembolso', 'estorno', 'devolução']
-    PREMIOS_CONCURSOS = ['prêmio', 'concurso', 'sorteio']
-    OUTROS_CREDITOS = ['doação', 'presente', 'outros créditos']
+    SALARIOS_RENDIMENTOS = []
+    INVESTIMENTOS = []
+    FREELANCES_SERVICOS = []
+    ALUGUEIS_RECEBIDOS = []
+    REEMBOLSOS_REVERSOES = []
+    PREMIOS_CONCURSOS = []
+    OUTROS_CREDITOS = []
     
-    MORADIA = ['aluguel', 'hipoteca', 'luz', 'água', 'energia', 'condomínio', 'serviços domésticos']
-    TRANSPORTE = ['combustível', 'transporte público', 'manutenção veículo', 'uber', 'táxi']
-    ALIMENTACAO = ['supermercado', 'restaurante', 'lanche', 'alimentação', 'comida']
-    EDUCACAO = ['escola', 'curso', 'material escolar', 'universidade']
-    SAUDE_BEM_ESTAR = ['saúde', 'medicamento', 'academia', 'médico', 'consulta']
-    LAZER_ENTRETENIMENTO = ['cinema', 'viagem', 'evento', 'show', 'lazer', 'hobbies']
-    VESTUARIO_COMPRAS_PESSOAIS = ['roupa', 'acessório', 'calçado', 'vestuário']
-    IMPOSTOS_TAXAS = ['imposto', 'multa', 'taxa bancária', 'encargos']
-    SERVICOS_ASSINATURAS = ['internet', 'assinatura', 'plano', 'tv a cabo', 'celular']
-    OUTROS_DEBITOS = ['outros débitos', 'despesa extra']
+    MORADIA = ['casasba*casas bahi', 'pagto ficha compensacao']
+    TRANSPORTE = []
+    ALIMENTACAO = []
+    EDUCACAO = []
+    SAUDE_BEM_ESTAR = []
+    LAZER_ENTRETENIMENTO = []
+    VESTUARIO_COMPRAS_PESSOAIS = []
+    IMPOSTOS_TAXAS = []
+    SERVICOS_ASSINATURAS = ['amazon kindle unltd', 'anuidade diferenci', 'google duolingo']
+    OUTROS_DEBITOS = ['encargos de atraso']
 
     def __init__(self, file_path, password_list=None):
         super().__init__(file_path, password_list)
@@ -37,16 +38,29 @@ class ItauParser(Parser):
                     self.save_transformed_dataframe(self.transformed_data)
 
     def extract_data(self):
-        extracted_lines = re.findall(self.PATTERN, self.text, re.MULTILINE)
+        stop_conditions = ['Compras parceladas - próximas faturas']
         self.data = []
-        for line in extracted_lines:
-            split_line = line.split(" ")
-            tmp = {
-                'data_transacao': split_line[0],
-                'valor_transacao': split_line[-1],
-                'descricao_transacao': ' '.join(split_line[1:-1])
-            }
-            self.data.append(tmp)
+        splitted_lines = self.text.split('\n')
+        curr_pos = 0
+        curr_date = ''
+        while curr_pos < len(splitted_lines):
+            curr_line = splitted_lines[curr_pos]
+            if any(re.match(cond, splitted_lines[curr_pos]) for cond in stop_conditions):
+                break
+            date_match = re.match(self.PATTERN, curr_line)
+            if date_match:
+                curr_date = date_match.group()
+                curr_pos +=1
+                curr_description = splitted_lines[curr_pos]
+                curr_pos +=1
+                curr_value = splitted_lines[curr_pos]
+                tmp = {
+                    'data_transacao': datetime.strptime(curr_date+"/"+self.file_path[-6:-4],'%d/%m/%y').strftime('%d/%m/%Y'),
+                    'valor_transacao': curr_value,
+                    'descricao_transacao': curr_description
+                }
+                self.data.append(tmp)
+            curr_pos +=1
 
     def transform_to_dataframe(self):
         df = pd.DataFrame(self.data)
