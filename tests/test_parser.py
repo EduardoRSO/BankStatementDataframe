@@ -1,6 +1,6 @@
 import os
 import unittest
-from bank_statement_parser.formats.parser_factory import ParserFactory, ItauParser, CaixaParser, BradescoParser, CarrefourParser
+from bank_statement_parser.formats.parser_factory import ParserFactory, ItauParser, CaixaParser, BradescoParser, CarrefourParser, InterParser
 
 class TestParserFactory(unittest.TestCase):
 
@@ -26,7 +26,8 @@ class TestParserFactory(unittest.TestCase):
                 "caixa_extrato.pdf": CaixaParser,
                 "bradesco_extrato.pdf": BradescoParser,
                 "carrefour_extrato.pdf": CarrefourParser,
-                "itau_extrato.pdf": ItauParser
+                "itau_extrato.pdf": ItauParser,
+                "inter_extrato.pdf": InterParser,
             }[file_name]
 
             self.assertIsInstance(parser, expected_parser_class, f"O parser para {file_name} não é da classe esperada.")
