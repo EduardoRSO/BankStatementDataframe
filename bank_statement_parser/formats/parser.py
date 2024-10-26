@@ -40,6 +40,6 @@ class Parser(ABC):
             combined_df = pd.concat([existing_df, dataframe]).drop_duplicates().reset_index(drop=True)
         else:
             combined_df = dataframe.drop_duplicates().reset_index(drop=True)
-
+        combined_df['descricao_transacao'] = combined_df['descricao_transacao'].str.lower()
         combined_df.to_csv(file_path, index=False)
         self.logger.info(f"Dataframe saved to {file_path}, with duplicates removed.")
