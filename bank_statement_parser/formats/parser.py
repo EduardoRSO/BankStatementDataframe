@@ -1,6 +1,7 @@
 import os
 import logging
 import regex as re
+import pandas as pd
 from abc import ABC, abstractmethod
 from bank_statement_parser.utils.pdf_extractor import PDFExtractor
 
@@ -27,3 +28,18 @@ class Parser(ABC):
         Método abstrato para extrair dados do extrato.
         """
         pass
+
+    def save_transformed_dataframe(self, dataframe: pd.DataFrame):
+        directory = "transformed_dataframe"
+        file_path = os.path.join(directory, "transformed_dataframe.csv")
+
+        os.makedirs(directory, exist_ok=True)
+        
+        if os.path.exists(file_path):
+            existing_df = pd.read_csv(file_path)
+            combined_df = pd.concat([existing_df, dataframe]).drop_duplicates().reset_index(drop=True)
+        else:
+            combined_df = dataframe.drop_duplicates().reset_index(drop=True)
+
+        combined_df.to_csv(file_path, index=False)
+        self.logger.info(f"Dataframe saved to {file_path}, with duplicates removed.")
