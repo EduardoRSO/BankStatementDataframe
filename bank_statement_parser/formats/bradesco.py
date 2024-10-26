@@ -3,46 +3,65 @@ import re
 from bank_statement_parser.formats.parser import Parser
 
 class BradescoParser(Parser):
-    PATTERN = r'^\d{2}/\d{2} .*?\d+$'
+    PATTERN = r"Data Histórico Docto\. Crédito \(R\$\) Débito \(R\$\) Saldo \(R\$\)"
+
     RECEITAS_CATEGORIAS = [
         'Salários e Rendimentos', 'Investimentos', 'Freelances e Serviços', 
         'Aluguéis Recebidos', 'Reembolsos e Reversões', 'Prêmios e Concursos', 'Outros Créditos'
     ]
-    SALARIOS_RENDIMENTOS = ['salário', 'rendimentos', 'benefício', 'bonus', 'salario']
+    SALARIOS_RENDIMENTOS = ['salário', 'benefício', 'bonus', 'salario','rendimentos poup facil-depos', 'transf saldo c/sal p/cc']
     INVESTIMENTOS = ['investimento', 'juros', 'dividendo', 'ações', 'ganho capital']
     FREELANCES_SERVICOS = ['freelance', 'serviço', 'consultoria']
     ALUGUEIS_RECEBIDOS = ['aluguel', 'renda locação']
-    REEMBOLSOS_REVERSOES = ['reembolso', 'estorno', 'devolução']
+    REEMBOLSOS_REVERSOES = ['devolução']
     PREMIOS_CONCURSOS = ['prêmio', 'concurso', 'sorteio']
-    OUTROS_CREDITOS = ['doação', 'presente', 'outros créditos']
+    OUTROS_CREDITOS = ['doação', 'presente', 'outros créditos', 'rem: napoleao ribeiro silv 24/06', 'transferencia pix rem: maria amelia mendes d 24/06']
     
-    MORADIA = ['aluguel', 'hipoteca', 'luz', 'água', 'energia', 'condomínio', 'serviços domésticos']
+    MORADIA = ['aluguel', 'hipoteca', 'luz', 'água', 'energia', 'condomínio', 'serviços domésticos', 'kaue boretti de lana', 'eletron']
     TRANSPORTE = ['combustível', 'transporte público', 'manutenção veículo', 'uber', 'táxi']
     ALIMENTACAO = ['supermercado', 'restaurante', 'lanche', 'alimentação', 'comida']
     EDUCACAO = ['escola', 'curso', 'material escolar', 'universidade']
     SAUDE_BEM_ESTAR = ['saúde', 'medicamento', 'academia', 'médico', 'consulta']
     LAZER_ENTRETENIMENTO = ['cinema', 'viagem', 'evento', 'show', 'lazer', 'hobbies']
     VESTUARIO_COMPRAS_PESSOAIS = ['roupa', 'acessório', 'calçado', 'vestuário']
-    IMPOSTOS_TAXAS = ['imposto', 'multa', 'taxa bancária', 'encargos']
+    IMPOSTOS_TAXAS = ['imposto', 'multa', 'taxa bancária', 'encargos', 'estorno de rendimentos * poup facil-depos']
     SERVICOS_ASSINATURAS = ['internet', 'assinatura', 'plano', 'tv a cabo', 'celular']
-    OUTROS_DEBITOS = ['outros débitos', 'despesa extra']
+    OUTROS_DEBITOS = ['outros débitos', 'despesa extra' , 'eduardo ribeiro silva 22/10', 'napoleao ribeiro silv 22/10', 'pix qr code estatico des: napoleao ribeiro silv 13/09']
 
     def __init__(self, file_path, password_list=None):
         super().__init__(file_path, password_list)
         self.extract_data()
         self.transform_to_dataframe()
 
+
     def extract_data(self):
-        extracted_lines = re.findall(self.PATTERN, self.text, re.MULTILINE)
+        stop_conditions = [r"Data Histórico Docto\. Crédito \(R\$\) Débito \(R\$\) Saldo \(R\$\)", r"Data: ", r"Total \d+,\d+ \d+,\d+$"]
         self.data = []
-        for line in extracted_lines:
-            split_line = line.split(" ")
-            tmp = {
-                'data_transacao': split_line[0],
-                'valor_transacao': split_line[-1],
-                'descricao_transacao': ' '.join(split_line[1:-1])
-            }
-            self.data.append(tmp)
+        splitted_lines = self.text.split('\n')
+        curr_pos = 0
+        while curr_pos < len(splitted_lines)-1:
+            curr_date = ''
+            line = splitted_lines[curr_pos]
+            if re.match(self.PATTERN,line):
+                curr_pos +=1
+                while not any(re.match(cond, splitted_lines[curr_pos]) for cond in stop_conditions):
+                    curr_line = str(splitted_lines[curr_pos] + splitted_lines[curr_pos+1]).replace('\n',' ')
+                    transaction_match = re.search(r'\d+,\d+\s*$', curr_line.strip())
+                    if transaction_match:
+                        date_match = re.match(r'^\d{2}/\d{2}/\d{4}', curr_line) 
+                        if date_match:
+                            curr_date = date_match.group()
+                            curr_line = curr_line.replace(curr_date, "")
+                        curr_line = curr_line.split(" ")
+                        tmp = {
+                            'data_transacao': curr_date,
+                            'valor_transacao': curr_line[-2],
+                            'descricao_transacao': ' '.join(curr_line[0:-2])
+                        }
+                        self.data.append(tmp)
+                    curr_pos +=1
+            else:
+                curr_pos +=1
 
     def transform_to_dataframe(self):
         df = pd.DataFrame(self.data)
