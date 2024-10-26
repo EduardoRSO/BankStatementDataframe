@@ -11,15 +11,13 @@ class ParserFactory:
     
     @staticmethod
     def get_parser(file_path, password_list=None):
-        file_name = os.path.basename(file_path).lower()
-
-        if "caixa" in file_name:
+        if "caixa" in file_path:
             return CaixaParser(file_path, password_list)
-        elif "bradesco" in file_name:
+        elif "bradesco" in file_path:
             return BradescoParser(file_path, password_list)
-        elif "carrefour" in file_name:
+        elif "carrefour" in file_path:
             return CarrefourParser(file_path, password_list)
-        elif "itau" in file_name:
+        elif "itau" in file_path:
             return ItauParser(file_path, password_list)
         else:
             raise ValueError(f"Nenhum parser disponível para o arquivo: {file_name}")
