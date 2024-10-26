@@ -163,3 +163,4 @@ cython_debug/
 extratos/
 *.txt
 *.json
+transformed_dataframe.csv
