@@ -59,7 +59,6 @@ def processar_arquivos_pdf():
 
             try:
                 parser = ParserFactory.get_parser(caminho_pdf, password_list=senhas)
-                parser.save_transformed_dataframe(parser.transformed_data)
             except ValueError as e:
                 print(f"Erro ao selecionar parser para o arquivo '{nome_arquivo}': {e}")
 
