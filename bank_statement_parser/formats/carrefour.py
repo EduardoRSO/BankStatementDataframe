@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+from datetime import datetime
 from bank_statement_parser.formats.parser import Parser
 
 class CarrefourParser(Parser):
@@ -39,7 +40,7 @@ class CarrefourParser(Parser):
         for line in extracted_lines:
             split_line = line.split(" ")
             tmp = {
-                'data_transacao': split_line[0],
+                'data_transacao': datetime.strptime(split_line[0]+"/"+self.file_path[-6:-4],'%d/%m/%y').strftime('%d/%m/%Y'),
                 'valor_transacao': split_line[-1],
                 'descricao_transacao': ' '.join(split_line[1:-1])
             }
