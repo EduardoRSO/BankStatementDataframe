@@ -13,23 +13,12 @@ class Parser(ABC):
     def __init__(self, file_path, password_list=None):
         self.file_path = file_path
         self.password_list = password_list if password_list else []  # Lista de senhas
-
-        # Configuração do logger
         self.logger = logging.getLogger(self.__class__.__name__)
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-        
-        # Instância do PDFExtractor com a lista de senhas
         self.pdf_extractor = PDFExtractor(file_path, self.password_list)
-        
-        # Extrai o texto do PDF usando as senhas fornecidas
         self.text = self.pdf_extractor.extract_text()
-        
-        # Define o caminho do arquivo de saída na pasta 'resultados'
-        output_dir = "resultados"
-        os.makedirs(output_dir, exist_ok=True)  # Cria a pasta se não existir
-        output_path = os.path.join(output_dir, os.path.basename(file_path).replace(".pdf", "_texto_extraido.txt"))
-
-        # Salva o texto extraído em um arquivo na pasta 'resultados'
+        os.makedirs("resultados", exist_ok=True)
+        output_path = os.path.join("resultados", os.path.basename(file_path.lower()).replace(".pdf", "_texto_extraido.txt"))
         self.pdf_extractor.save_text_to_file(output_path)
 
     @abstractmethod
