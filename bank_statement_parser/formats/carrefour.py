@@ -5,6 +5,20 @@ from bank_statement_parser.formats.parser import Parser
 
 class CarrefourParser(Parser):
     PATTERN = r'^\d{2}/\d{2} .*?\d+$'
+    MESES = {
+        "jan": "01",
+        "fev": "02",
+        "mar": "03",
+        "abr": "04",
+        "mai": "05",
+        "jun": "06",
+        "jul": "07",
+        "ago": "08",
+        "set": "09",
+        "out": "10",
+        "nov": "11",
+        "dez": "12"
+    }
     RECEITAS_CATEGORIAS = [
         'Salários e Rendimentos', 'Investimentos', 'Freelances e Serviços', 
         'Aluguéis Recebidos', 'Reembolsos e Reversões', 'Prêmios e Concursos', 'Outros Créditos'
@@ -42,8 +56,11 @@ class CarrefourParser(Parser):
         self.data = []
         for line in extracted_lines:
             split_line = line.split(" ")
+            dia = split_line[0][0:2]
+            mes = self.MESES[self.file_path[-9:-6]]
+            ano = self.file_path[-6:-4]
             tmp = {
-                'data_transacao': datetime.strptime(split_line[0]+"/"+self.file_path[-6:-4],'%d/%m/%y').strftime('%d/%m/%Y'),
+                'data_transacao': datetime.strptime(f'{dia}/{mes}/{ano}','%d/%m/%y').strftime('%d/%m/%Y'),
                 'valor_transacao': split_line[-1],
                 'descricao_transacao': ' '.join(split_line[1:-1])
             }
