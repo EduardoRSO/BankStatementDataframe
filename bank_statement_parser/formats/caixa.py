@@ -3,34 +3,35 @@ import re
 from bank_statement_parser.formats.parser import Parser
 
 class CaixaParser(Parser):
-    PATTERN = r'^\d{2}/\d{2} .*?\d+$'
+    PATTERN = r'^\d{2}/\d{2}/\d{4} .*?,\d{2} [A-Z] .*?,\d{2} [A-Z]'
     RECEITAS_CATEGORIAS = [
         'Salários e Rendimentos', 'Investimentos', 'Freelances e Serviços', 
         'Aluguéis Recebidos', 'Reembolsos e Reversões', 'Prêmios e Concursos', 'Outros Créditos'
     ]
-    SALARIOS_RENDIMENTOS = ['salário', 'rendimentos', 'benefício', 'bonus', 'salario']
-    INVESTIMENTOS = ['investimento', 'juros', 'dividendo', 'ações', 'ganho capital']
-    FREELANCES_SERVICOS = ['freelance', 'serviço', 'consultoria']
-    ALUGUEIS_RECEBIDOS = ['aluguel', 'renda locação']
-    REEMBOLSOS_REVERSOES = ['reembolso', 'estorno', 'devolução']
-    PREMIOS_CONCURSOS = ['prêmio', 'concurso', 'sorteio']
-    OUTROS_CREDITOS = ['doação', 'presente', 'outros créditos']
+    SALARIOS_RENDIMENTOS = ['cred inss']
+    INVESTIMENTOS = []
+    FREELANCES_SERVICOS = []
+    ALUGUEIS_RECEBIDOS = []
+    REEMBOLSOS_REVERSOES = []
+    PREMIOS_CONCURSOS = []
+    OUTROS_CREDITOS = ['saldo dia', 'cred', 'dp din lot', 'dep din ag', 'dep', 'dp']
     
-    MORADIA = ['aluguel', 'hipoteca', 'luz', 'água', 'energia', 'condomínio', 'serviços domésticos']
-    TRANSPORTE = ['combustível', 'transporte público', 'manutenção veículo', 'uber', 'táxi']
-    ALIMENTACAO = ['supermercado', 'restaurante', 'lanche', 'alimentação', 'comida']
-    EDUCACAO = ['escola', 'curso', 'material escolar', 'universidade']
-    SAUDE_BEM_ESTAR = ['saúde', 'medicamento', 'academia', 'médico', 'consulta']
-    LAZER_ENTRETENIMENTO = ['cinema', 'viagem', 'evento', 'show', 'lazer', 'hobbies']
-    VESTUARIO_COMPRAS_PESSOAIS = ['roupa', 'acessório', 'calçado', 'vestuário']
-    IMPOSTOS_TAXAS = ['imposto', 'multa', 'taxa bancária', 'encargos']
-    SERVICOS_ASSINATURAS = ['internet', 'assinatura', 'plano', 'tv a cabo', 'celular']
-    OUTROS_DEBITOS = ['outros débitos', 'despesa extra']
+    MORADIA = ['compra', 'db cx cap', 'luz', 'gas', 'pag boleto', 'cp elo']
+    TRANSPORTE = []
+    ALIMENTACAO = []
+    EDUCACAO = []
+    SAUDE_BEM_ESTAR = []
+    LAZER_ENTRETENIMENTO = ['ap loteria', 'saque lot']
+    VESTUARIO_COMPRAS_PESSOAIS = []
+    IMPOSTOS_TAXAS = ['deb iof', 'deb juros']
+    SERVICOS_ASSINATURAS = ['db t cesta', 'fone']
+    OUTROS_DEBITOS = ['envio pix']
 
     def __init__(self, file_path, password_list=None):
         super().__init__(file_path, password_list)
         self.extract_data()
-        #self.transform_to_dataframe()
+        self.transform_to_dataframe()
+        self.save_transformed_dataframe(self.transformed_data)
 
     def extract_data(self):
         extracted_lines = re.findall(self.PATTERN, self.text, re.MULTILINE)
@@ -39,8 +40,8 @@ class CaixaParser(Parser):
             split_line = line.split(" ")
             tmp = {
                 'data_transacao': split_line[0],
-                'valor_transacao': split_line[-1],
-                'descricao_transacao': ' '.join(split_line[1:-1])
+                'valor_transacao': split_line[-4],
+                'descricao_transacao': ' '.join(split_line[1:-4])
             }
             self.data.append(tmp)
 
