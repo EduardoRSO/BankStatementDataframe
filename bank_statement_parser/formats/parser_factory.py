@@ -1,5 +1,6 @@
 import os
 from bank_statement_parser.formats.itau import ItauParser
+from bank_statement_parser.formats.inter import InterParser
 from bank_statement_parser.formats.caixa import CaixaParser
 from bank_statement_parser.formats.bradesco import BradescoParser
 from bank_statement_parser.formats.carrefour import CarrefourParser
@@ -19,5 +20,7 @@ class ParserFactory:
             return CarrefourParser(file_path, password_list)
         elif "itau" in file_path:
             return ItauParser(file_path, password_list)
+        elif "inter" in file_path:
+            return InterParser(file_path, password_list)
         else:
             raise ValueError(f"Nenhum parser disponível para o arquivo: {file_path}")
