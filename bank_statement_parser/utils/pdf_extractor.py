@@ -11,14 +11,10 @@ class PDFExtractor:
         self.pdf_path = pdf_path
         self.text = ""
         self.password_list = password_list if password_list else []
-        self.decrypted_file_created = False  # Booleano para indicar se um arquivo descriptografado foi criado
-
-        # Configuração do logger
+        self.decrypted_file_created = False
         self.logger = logging.getLogger("PDFExtractor")
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
         logging.getLogger("PyPDF2").setLevel(logging.WARNING)
-
-        # Remover a senha se o PDF estiver protegido
         self.remove_pdf_password()
 
     def remove_pdf_password(self):
@@ -34,8 +30,6 @@ class PDFExtractor:
                             break
                     else:
                         raise ValueError("Nenhuma senha fornecida é válida para este PDF.")
-                    
-                    # Salva o PDF sem senha com o sufixo "_descriptografado.pdf"
                     new_pdf_path = self.pdf_path.replace(".PDF", "_descriptografado.pdf")
                     writer = PyPDF2.PdfWriter()
                     for page in reader.pages:
@@ -45,7 +39,7 @@ class PDFExtractor:
 
                     self.logger.info(f"PDF salvo sem senha: {new_pdf_path}")
                     self.pdf_path = new_pdf_path
-                    self.decrypted_file_created = True  # Indica que o arquivo descriptografado foi criado
+                    self.decrypted_file_created = True
                 else:
                     self.logger.info(f"O PDF já está sem senha: {self.pdf_path}")
         except Exception as e:
@@ -75,8 +69,6 @@ class PDFExtractor:
         except Exception as e:
             self.logger.error(f"Erro ao extrair texto com PyPDF2: {e}")
             self.logger.info("Tentando extrair o texto com pdfplumber...")
-
-            # Tentativa com pdfplumber
             try:
                 with pdfplumber.open(self.pdf_path) as pdf:
                     for page in pdf.pages:
@@ -105,7 +97,6 @@ class PDFExtractor:
         except Exception as e:
             self.logger.error(f"Erro ao salvar o texto: {e}")
         finally:
-            # Chama o método para remover o arquivo descriptografado, se necessário
             self.remove_decrypted_file()
 
     def remove_decrypted_file(self):
