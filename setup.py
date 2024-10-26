@@ -1,5 +1,10 @@
 from setuptools import setup, find_packages
 
+# Function to read dependencies from requirements.txt
+def parse_requirements(filename):
+    with open(filename, 'r', encoding='utf-8') as file:
+        return file.read().splitlines()
+
 setup(
     name="BankStatementParser",
     version="0.1.0",
@@ -8,9 +13,7 @@ setup(
     author_email="edusillva784@gmail.com",
     url="https://github.com/EduardoRSO/BankStatementParser",
     packages=find_packages(),
-    install_requires=[
-        # Dependências serão preenchidas ao final do projeto
-    ],
+    install_requires=parse_requirements('requirements.txt'),  # Read dependencies from requirements.txt
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
