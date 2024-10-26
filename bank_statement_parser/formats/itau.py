@@ -29,9 +29,12 @@ class ItauParser(Parser):
 
     def __init__(self, file_path, password_list=None):
         super().__init__(file_path, password_list)
-        self.extract_data()
-        self.transform_to_dataframe()
-        self.save_transformed_dataframe(self.transformed_data)
+        if self.text != "":
+            self.extract_data()
+            if self.data != []:
+                self.transform_to_dataframe()
+                if not self.transformed_data.empty:
+                    self.save_transformed_dataframe(self.transformed_data)
 
     def extract_data(self):
         extracted_lines = re.findall(self.PATTERN, self.text, re.MULTILINE)
