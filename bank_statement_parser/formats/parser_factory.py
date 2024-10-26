@@ -20,4 +20,4 @@ class ParserFactory:
         elif "itau" in file_path:
             return ItauParser(file_path, password_list)
         else:
-            raise ValueError(f"Nenhum parser disponível para o arquivo: {file_name}")
+            raise ValueError(f"Nenhum parser disponível para o arquivo: {file_path}")
