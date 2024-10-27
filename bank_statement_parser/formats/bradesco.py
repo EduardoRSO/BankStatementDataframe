@@ -11,7 +11,7 @@ class BradescoParser(Parser):
         if self.text != "":
             self.extract_data()
             if self.data != []:
-                self.transform_to_dataframe()
+                self.transform_to_dataframe('Bradesco')
                 if not self.transformed_data.empty:
                     self.save_transformed_dataframe(self.transformed_data)
 
