@@ -21,7 +21,8 @@ class Parser(ABC):
         os.makedirs("resultados", exist_ok=True)
         output_path = os.path.join("resultados", os.path.basename(file_path.lower()).replace(".pdf", "_texto_extraido.txt"))
         self.pdf_extractor.save_text_to_file(output_path)
-        self.category_definitions = {}
+        self.receitas_definitions = {}
+        self.custos_definitions = {}
 
     @abstractmethod
     def extract_data(self):
@@ -45,10 +46,6 @@ class Parser(ABC):
             # Load receitas and custos sheets into separate dictionaries
             receitas_df = pd.read_excel(file_path, sheet_name=receitas_sheet)
             custos_df = pd.read_excel(file_path, sheet_name=custos_sheet)
-            
-            # Initialize dictionaries to store category definitions
-            self.receitas_definitions = {}
-            self.custos_definitions = {}
 
             # Fill receitas definitions
             for category in receitas_df.columns:
