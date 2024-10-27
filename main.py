@@ -48,6 +48,10 @@ def processar_arquivos_pdf():
     if os.path.exists(pasta_transformada):
         shutil.rmtree(pasta_transformada)
 
+    pasta_transformada = "resultados"
+    if os.path.exists(pasta_transformada):
+        shutil.rmtree(pasta_transformada)
+
     if not os.path.exists(pasta_extratos):
         print(f"Pasta '{pasta_extratos}' não encontrada.")
         return
