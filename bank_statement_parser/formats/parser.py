@@ -30,21 +30,39 @@ class Parser(ABC):
         """
         pass
 
-    def load_category_definitions(self, sheet_name, file_path="categorias_definicoes.xlsx"):
+    def load_category_definitions(self, bank_name, file_path="categorias_definicoes.xlsx"):
         """
-        Carrega as definições de strings de cada categoria a partir de um arquivo .xlsx.
-        
+        Loads category definitions from an Excel file into separate dictionaries for "receitas" and "custos".
+
         Args:
-        - sheet_name (str): Nome da aba (Inter, Itau, Caixa, etc.)
-        - file_path (str): Caminho do arquivo Excel que contém as definições. Default é "categorias_definicoes.xlsx".
+        - bank_name (str): Name of the bank (e.g., 'Inter', 'Itau', etc.)
+        - file_path (str): Path to the Excel file containing category definitions. Default is "categorias_definicoes.xlsx".
         """
         try:
-            df = pd.read_excel(file_path, sheet_name=sheet_name)
-            for category in df.columns:
-                self.category_definitions[category] = df[category].dropna().tolist()
-            self.logger.info(f"Definições de categorias carregadas da aba '{sheet_name}'")
+            receitas_sheet = f"{bank_name}_receitas"
+            custos_sheet = f"{bank_name}_custos"
+            
+            # Load receitas and custos sheets into separate dictionaries
+            receitas_df = pd.read_excel(file_path, sheet_name=receitas_sheet)
+            custos_df = pd.read_excel(file_path, sheet_name=custos_sheet)
+            
+            # Initialize dictionaries to store category definitions
+            self.receitas_definitions = {}
+            self.custos_definitions = {}
+
+            # Fill receitas definitions
+            for category in receitas_df.columns:
+                self.receitas_definitions[category] = receitas_df[category].dropna().tolist()
+
+            # Fill custos definitions
+            for category in custos_df.columns:
+                self.custos_definitions[category] = custos_df[category].dropna().tolist()
+
+            self.logger.info(f"Category definitions loaded for '{bank_name}' from sheets '{receitas_sheet}' and '{custos_sheet}'")
+        
         except Exception as e:
-            self.logger.error(f"Erro ao carregar definições de categorias: {e}")
+            self.logger.error(f"Error loading category definitions for '{bank_name}': {e}")
+
 
     def save_transformed_dataframe(self, dataframe: pd.DataFrame):
         directory = "transformed_dataframe"
@@ -61,19 +79,14 @@ class Parser(ABC):
         combined_df.to_csv(file_path, index=False)
         self.logger.info(f"Dataframe saved to {file_path}, with duplicates removed.")
 
-    def classificar_categoria(self, row:pd.DataFrame):
+    def classificar_categoria(self, row: pd.DataFrame):
         descricao = row['descricao_transacao'].lower()
-        if row['tipo_hierarquia'] == 'Receitas':
-            for category, terms in self.category_definitions.items():
-                if any(term in descricao for term in terms):
-                    return category
-            return 'Outros'
-        elif row['tipo_hierarquia'] == 'Custos':
-            for category, terms in self.category_definitions.items():
-                if any(term in descricao for term in terms):
-                    return category
-            return 'Outros'
-            
+        definitions = self.receitas_definitions if row['tipo_hierarquia'] == 'Receitas' else self.custos_definitions
+        for category, keywords in definitions.items():
+            if any(word in descricao for word in keywords):
+                return category
+        return 'Outros'
+    
     def transform_to_dataframe(self, origem:str):
         df = pd.DataFrame(self.data)
         df.rename(columns={
