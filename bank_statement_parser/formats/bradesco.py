@@ -17,7 +17,7 @@ class BradescoParser(Parser):
 
 
     def extract_data(self):
-        stop_conditions = [r"Data Histórico Docto\. Crédito \(R\$\) Débito \(R\$\) Saldo \(R\$\)", r"Data: ", r"Total \d+,\d+ \d+,\d+$"]
+        stop_conditions = [r"Data Histórico Docto\. Crédito \(R\$\) Débito \(R\$\) Saldo \(R\$\)", r"Data: ", r"Total \d*\.*\d+,\d+ \d*\.*\d+,\d+"]
         self.data = []
         splitted_lines = self.text.split('\n')
         curr_pos = 0
@@ -28,6 +28,8 @@ class BradescoParser(Parser):
                 curr_pos +=1
                 while not any(re.match(cond, splitted_lines[curr_pos]) for cond in stop_conditions):
                     curr_line = str(splitted_lines[curr_pos] + splitted_lines[curr_pos+1]).replace('\n',' ')
+                    if any(re.search(cond,curr_line) for cond in stop_conditions):
+                        break
                     transaction_match = re.search(r'\d+,\d+\s*$', curr_line.strip())
                     if transaction_match:
                         date_match = re.match(r'^\d{2}/\d{2}/\d{4}', curr_line) 
@@ -59,7 +61,7 @@ class BradescoParser(Parser):
         df['categoria_transacao'] = df.apply(self.classificar_categoria, axis=1)
         df['tipo_hierarquia'] = df['categoria_transacao'].apply(lambda x: 'Receitas' if x in self.receitas_definitions.keys() else 'Custos')
         df['entrada'] = df.apply(lambda x: abs(x['valor_transacao']) if x['tipo_hierarquia'] == 'Receitas' else 0, axis=1)
-        df['saida'] = df.apply(lambda x: abs(x['valor_transacao']) if x['tipo_hierarquia'] == 'Receitas' else 0, axis=1)
+        df['saida'] = df.apply(lambda x: abs(x['valor_transacao']) if x['tipo_hierarquia'] != 'Receitas' else 0, axis=1)
         df['net'] = df['entrada'] - df['saida']
         df['origem'] = 'Bradesco'
         self.transformed_data = df
