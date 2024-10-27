@@ -58,8 +58,20 @@ class BradescoParser(Parser):
         df['valor_transacao'] = pd.to_numeric(df['valor_transacao'].str.replace('.', '').str.replace(',', '.').str.strip())
         df['categoria_transacao'] = df.apply(self.classificar_categoria, axis=1)
         df['tipo_hierarquia'] = df['categoria_transacao'].apply(lambda x: 'Receitas' if x in self.receitas_definitions.keys() else 'Custos')
-        df['entrada'] = df['tipo_hierarquia'].apply(lambda x: abs(x) if x == 'Receitas' else 0)
-        df['saida'] = df['tipo_hierarquia'].apply(lambda x: abs(x) if x != 'Receitas'else 0)
+        df['entrada'] = df.apply(lambda x: abs(x['valor_transacao']) if x['tipo_hierarquia'] == 'Receitas' else 0, axis=1)
+        df['saida'] = df.apply(lambda x: abs(x['valor_transacao']) if x['tipo_hierarquia'] == 'Receitas' else 0, axis=1)
         df['net'] = df['entrada'] - df['saida']
         df['origem'] = 'Bradesco'
         self.transformed_data = df
+
+    def classificar_categoria(self, row: pd.DataFrame):
+        descricao = row['descricao_transacao'].lower()
+        definitions = self.receitas_definitions 
+        for category, keywords in definitions.items():
+            if any(word in descricao for word in keywords):
+                return category
+        definitions = self.custos_definitions 
+        for category, keywords in definitions.items():
+            if any(word in descricao for word in keywords):
+                return category
+        return 'Outros'
