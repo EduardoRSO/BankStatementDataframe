@@ -32,7 +32,7 @@ class CaixaParser(Parser):
         if self.text != "":
             self.extract_data()
             if self.data != []:
-                self.transform_to_dataframe()
+                self.transform_to_dataframe('Caixa')
                 if not self.transformed_data.empty:
                     self.save_transformed_dataframe(self.transformed_data)
 
@@ -50,63 +50,3 @@ class CaixaParser(Parser):
                 'descricao_transacao': extracted_description
             }
             self.data.append(tmp)
-
-    def transform_to_dataframe(self):
-        df = pd.DataFrame(self.data)
-        df.rename(columns={
-            'data_transacao': 'data_transacao',
-            'valor_transacao': 'valor_transacao',
-            'descricao_transacao': 'descricao_transacao'
-        }, inplace=True)
-        
-        df['valor_transacao'] = pd.to_numeric(df['valor_transacao'].str.replace('.', '').str.replace(',', '.').str.replace('-', '').str.strip())
-        df['tipo_hierarquia'] = df['valor_transacao'].apply(lambda x: 'Receitas' if x >= 0 else 'Custos')
-        df['categoria_transacao'] = df.apply(self.classificar_categoria,axis=1)
-        df['entrada'] = df['valor_transacao'].apply(lambda x: abs(x) if x >= 0 else 0)
-        df['saida'] = df['valor_transacao'].apply(lambda x: abs(x) if x < 0 else 0)
-        df['net'] = df['entrada'] - df['saida']
-        df['origem'] = 'Caixa'
-        self.transformed_data = df
-
-    def classificar_categoria(self, row:pd.DataFrame):
-        descricao = row['descricao_transacao'].lower()
-        if row['tipo_hierarquia'] == 'Receitas':
-            if any(word in descricao for word in self.SALARIOS_RENDIMENTOS):
-                return 'Salários e Rendimentos'
-            elif any(word in descricao for word in self.INVESTIMENTOS):
-                return 'Investimentos'
-            elif any(word in descricao for word in self.FREELANCES_SERVICOS):
-                return 'Freelances e Serviços'
-            elif any(word in descricao for word in self.ALUGUEIS_RECEBIDOS):
-                return 'Aluguéis Recebidos'
-            elif any(word in descricao for word in self.REEMBOLSOS_REVERSOES):
-                return 'Reembolsos e Reversões'
-            elif any(word in descricao for word in self.PREMIOS_CONCURSOS):
-                return 'Prêmios e Concursos'
-            elif any(word in descricao for word in self.OUTROS_CREDITOS):
-                return 'Outros Créditos'
-            else:
-                return 'Outros'
-        if row['tipo_hierarquia'] == 'Custos':
-            if any(word in descricao for word in self.MORADIA):
-                return 'Moradia'
-            elif any(word in descricao for word in self.TRANSPORTE):
-                return 'Transporte'
-            elif any(word in descricao for word in self.ALIMENTACAO):
-                return 'Alimentação'
-            elif any(word in descricao for word in self.EDUCACAO):
-                return 'Educação'
-            elif any(word in descricao for word in self.SAUDE_BEM_ESTAR):
-                return 'Saúde e Bem-estar'
-            elif any(word in descricao for word in self.LAZER_ENTRETENIMENTO):
-                return 'Lazer e Entretenimento'
-            elif any(word in descricao for word in self.VESTUARIO_COMPRAS_PESSOAIS):
-                return 'Vestuário e Compras Pessoais'
-            elif any(word in descricao for word in self.IMPOSTOS_TAXAS):
-                return 'Impostos e Taxas'
-            elif any(word in descricao for word in self.SERVICOS_ASSINATURAS):
-                return 'Serviços e Assinaturas'
-            elif any(word in descricao for word in self.OUTROS_DEBITOS):
-                return 'Outros Débitos'
-            else:
-                return 'Outros'
