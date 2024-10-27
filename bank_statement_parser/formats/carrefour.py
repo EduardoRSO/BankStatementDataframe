@@ -19,31 +19,10 @@ class CarrefourParser(Parser):
         "nov": "11",
         "dez": "12"
     }
-    RECEITAS_CATEGORIAS = [
-        'Salários e Rendimentos', 'Investimentos', 'Freelances e Serviços', 
-        'Aluguéis Recebidos', 'Reembolsos e Reversões', 'Prêmios e Concursos', 'Outros Créditos'
-    ]
-    SALARIOS_RENDIMENTOS = []
-    INVESTIMENTOS = []
-    FREELANCES_SERVICOS = []
-    ALUGUEIS_RECEBIDOS = []
-    REEMBOLSOS_REVERSOES = []
-    PREMIOS_CONCURSOS = []
-    OUTROS_CREDITOS = []
-    
-    MORADIA = ['crf 3 spp pinheiros -', 'assai atacadista,sao paulo-', 'crf 48 spg giovanni gronc', 'shekinah comercio de m, sao paulo', 'maravilha carnes parqu, sao paulo', 'p&f mat. construcao, sao paulo', 'duda gas, sao paulo', 'akki atacadista, sao paulo', 'assai atacadista, sao paulo']
-    TRANSPORTE = []
-    ALIMENTACAO = []
-    EDUCACAO = ['htm*cursoclpeihm,coronel fabr-']
-    SAUDE_BEM_ESTAR = ['academia sempre viva i,sao paulo-', 'pg *ton garra de agu,sao paulo-', 'planta e saude, sao paulo', 'megafarma, sao paulo']
-    LAZER_ENTRETENIMENTO = []
-    VESTUARIO_COMPRAS_PESSOAIS = ['otica bom preco,sao paulo-', 'agpsapataria, sao paulo', 'fabrica de oculos,sao paulo-']
-    IMPOSTOS_TAXAS = []
-    SERVICOS_ASSINATURAS = ['anuidade diferenciada -']
-    OUTROS_DEBITOS = ['advocacia dgl,maringa-', 'mercadocar, sao paulo']
 
     def __init__(self, file_path, password_list=None):
         super().__init__(file_path, password_list)
+        self.load_category_definitions('Carrefour')
         if self.text != "":
             self.extract_data()
             if self.data != []:

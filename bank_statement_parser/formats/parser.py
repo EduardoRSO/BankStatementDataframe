@@ -21,6 +21,7 @@ class Parser(ABC):
         os.makedirs("resultados", exist_ok=True)
         output_path = os.path.join("resultados", os.path.basename(file_path.lower()).replace(".pdf", "_texto_extraido.txt"))
         self.pdf_extractor.save_text_to_file(output_path)
+        self.category_definitions = {}
 
     @abstractmethod
     def extract_data(self):
@@ -28,6 +29,22 @@ class Parser(ABC):
         Método abstrato para extrair dados do extrato.
         """
         pass
+
+    def load_category_definitions(self, sheet_name, file_path="categorias_definicoes.xlsx"):
+        """
+        Carrega as definições de strings de cada categoria a partir de um arquivo .xlsx.
+        
+        Args:
+        - sheet_name (str): Nome da aba (Inter, Itau, Caixa, etc.)
+        - file_path (str): Caminho do arquivo Excel que contém as definições. Default é "categorias_definicoes.xlsx".
+        """
+        try:
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
+            for category in df.columns:
+                self.category_definitions[category] = df[category].dropna().tolist()
+            self.logger.info(f"Definições de categorias carregadas da aba '{sheet_name}'")
+        except Exception as e:
+            self.logger.error(f"Erro ao carregar definições de categorias: {e}")
 
     def save_transformed_dataframe(self, dataframe: pd.DataFrame):
         directory = "transformed_dataframe"
@@ -47,45 +64,15 @@ class Parser(ABC):
     def classificar_categoria(self, row:pd.DataFrame):
         descricao = row['descricao_transacao'].lower()
         if row['tipo_hierarquia'] == 'Receitas':
-            if any(word in descricao for word in self.SALARIOS_RENDIMENTOS):
-                return 'Salários e Rendimentos'
-            elif any(word in descricao for word in self.INVESTIMENTOS):
-                return 'Investimentos'
-            elif any(word in descricao for word in self.FREELANCES_SERVICOS):
-                return 'Freelances e Serviços'
-            elif any(word in descricao for word in self.ALUGUEIS_RECEBIDOS):
-                return 'Aluguéis Recebidos'
-            elif any(word in descricao for word in self.REEMBOLSOS_REVERSOES):
-                return 'Reembolsos e Reversões'
-            elif any(word in descricao for word in self.PREMIOS_CONCURSOS):
-                return 'Prêmios e Concursos'
-            elif any(word in descricao for word in self.OUTROS_CREDITOS):
-                return 'Outros Créditos'
-            else:
-                return 'Outros'
-        if row['tipo_hierarquia'] == 'Custos':
-            if any(word in descricao for word in self.MORADIA):
-                return 'Moradia'
-            elif any(word in descricao for word in self.TRANSPORTE):
-                return 'Transporte'
-            elif any(word in descricao for word in self.ALIMENTACAO):
-                return 'Alimentação'
-            elif any(word in descricao for word in self.EDUCACAO):
-                return 'Educação'
-            elif any(word in descricao for word in self.SAUDE_BEM_ESTAR):
-                return 'Saúde e Bem-estar'
-            elif any(word in descricao for word in self.LAZER_ENTRETENIMENTO):
-                return 'Lazer e Entretenimento'
-            elif any(word in descricao for word in self.VESTUARIO_COMPRAS_PESSOAIS):
-                return 'Vestuário e Compras Pessoais'
-            elif any(word in descricao for word in self.IMPOSTOS_TAXAS):
-                return 'Impostos e Taxas'
-            elif any(word in descricao for word in self.SERVICOS_ASSINATURAS):
-                return 'Serviços e Assinaturas'
-            elif any(word in descricao for word in self.OUTROS_DEBITOS):
-                return 'Outros Débitos'
-            else:
-                return 'Outros'
+            for category, terms in self.category_definitions.items():
+                if any(term in descricao for term in terms):
+                    return category
+            return 'Outros'
+        elif row['tipo_hierarquia'] == 'Custos':
+            for category, terms in self.category_definitions.items():
+                if any(term in descricao for term in terms):
+                    return category
+            return 'Outros'
             
     def transform_to_dataframe(self, origem:str):
         df = pd.DataFrame(self.data)
@@ -93,11 +80,10 @@ class Parser(ABC):
             'data_transacao': 'data_transacao',
             'valor_transacao': 'valor_transacao',
             'descricao_transacao': 'descricao_transacao'
-        }, inplace=True)
-        
+        }, inplace=True)  
         df['valor_transacao'] = pd.to_numeric(df['valor_transacao'].str.replace('.', '').str.replace(',', '.').str.strip())
         df['tipo_hierarquia'] = df['valor_transacao'].apply(lambda x: 'Receitas' if x >= 0 else 'Custos')
-        df['categoria_transacao'] = df.apply(self.classificar_categoria,axis=1)
+        df['categoria_transacao'] = df.apply(self.classificar_categoria, axis=1)
         df['entrada'] = df['valor_transacao'].apply(lambda x: abs(x) if x >= 0 else 0)
         df['saida'] = df['valor_transacao'].apply(lambda x: abs(x) if x < 0 else 0)
         df['net'] = df['entrada'] - df['saida']

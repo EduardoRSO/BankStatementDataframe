@@ -5,31 +5,9 @@ from bank_statement_parser.formats.parser import Parser
 class BradescoParser(Parser):
     PATTERN = r"Data Histórico Docto\. Crédito \(R\$\) Débito \(R\$\) Saldo \(R\$\)"
 
-    RECEITAS_CATEGORIAS = [
-        'Salários e Rendimentos', 'Investimentos', 'Freelances e Serviços', 
-        'Aluguéis Recebidos', 'Reembolsos e Reversões', 'Prêmios e Concursos', 'Outros Créditos'
-    ]
-    SALARIOS_RENDIMENTOS = ['rendimentos poup facil-depos', 'transf saldo c/sal p/cc', 'credito de salario bco:']
-    INVESTIMENTOS = []
-    FREELANCES_SERVICOS = []
-    ALUGUEIS_RECEBIDOS = []
-    REEMBOLSOS_REVERSOES = []
-    PREMIOS_CONCURSOS = []
-    OUTROS_CREDITOS = ['rem: napoleao ribeiro silv 24/06', 'transferencia pix rem: maria amelia mendes d 24/06']
-    
-    MORADIA = ['kaue boretti de lana', 'eletron']
-    TRANSPORTE = []
-    ALIMENTACAO = []
-    EDUCACAO = ['caixa de cursos ltda']
-    SAUDE_BEM_ESTAR = []
-    LAZER_ENTRETENIMENTO = []
-    VESTUARIO_COMPRAS_PESSOAIS = []
-    IMPOSTOS_TAXAS = ['estorno de rendimentos * poup facil-depos']
-    SERVICOS_ASSINATURAS = []
-    OUTROS_DEBITOS = ['eduardo ribeiro silva 22/10', 'napoleao ribeiro silv 22/10', 'pix qr code estatico des: napoleao ribeiro silv 13/09']
-
     def __init__(self, file_path, password_list=None):
         super().__init__(file_path, password_list)
+        self.load_category_definitions('Bradesco')
         if self.text != "":
             self.extract_data()
             if self.data != []:

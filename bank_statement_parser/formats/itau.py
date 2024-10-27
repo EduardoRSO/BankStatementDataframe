@@ -5,31 +5,10 @@ from bank_statement_parser.formats.parser import Parser
 
 class ItauParser(Parser):
     PATTERN = r'^\d{2}/\d{2}$'
-    RECEITAS_CATEGORIAS = [
-        'Salários e Rendimentos', 'Investimentos', 'Freelances e Serviços', 
-        'Aluguéis Recebidos', 'Reembolsos e Reversões', 'Prêmios e Concursos', 'Outros Créditos'
-    ]
-    SALARIOS_RENDIMENTOS = []
-    INVESTIMENTOS = []
-    FREELANCES_SERVICOS = []
-    ALUGUEIS_RECEBIDOS = []
-    REEMBOLSOS_REVERSOES = []
-    PREMIOS_CONCURSOS = []
-    OUTROS_CREDITOS = []
-    
-    MORADIA = ['casasba*casas bahi', 'pagto ficha compensacao']
-    TRANSPORTE = []
-    ALIMENTACAO = []
-    EDUCACAO = []
-    SAUDE_BEM_ESTAR = []
-    LAZER_ENTRETENIMENTO = []
-    VESTUARIO_COMPRAS_PESSOAIS = []
-    IMPOSTOS_TAXAS = []
-    SERVICOS_ASSINATURAS = ['amazon kindle unltd', 'anuidade diferenci', 'google duolingo']
-    OUTROS_DEBITOS = ['encargos de atraso']
 
     def __init__(self, file_path, password_list=None):
         super().__init__(file_path, password_list)
+        self.load_category_definitions('Itau')
         if self.text != "":
             self.extract_data()
             if self.data != []:

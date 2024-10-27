@@ -4,31 +4,10 @@ from bank_statement_parser.formats.parser import Parser
 
 class CaixaParser(Parser):
     PATTERN = r'^\d{2}/\d{2}/\d{4} .*?,\d{2} [A-Z] .*?,\d{2} [A-Z]'
-    RECEITAS_CATEGORIAS = [
-        'Salários e Rendimentos', 'Investimentos', 'Freelances e Serviços', 
-        'Aluguéis Recebidos', 'Reembolsos e Reversões', 'Prêmios e Concursos', 'Outros Créditos'
-    ]
-    SALARIOS_RENDIMENTOS = ['cred inss']
-    INVESTIMENTOS = []
-    FREELANCES_SERVICOS = []
-    ALUGUEIS_RECEBIDOS = []
-    REEMBOLSOS_REVERSOES = []
-    PREMIOS_CONCURSOS = []
-    OUTROS_CREDITOS = ['saldo dia', 'cred', 'dp din lot', 'dep din ag', 'dep', 'dp']
-    
-    MORADIA = ['compra', 'db cx cap', 'luz', 'gas', 'pag boleto', 'cp elo']
-    TRANSPORTE = []
-    ALIMENTACAO = []
-    EDUCACAO = []
-    SAUDE_BEM_ESTAR = []
-    LAZER_ENTRETENIMENTO = ['ap loteria', 'saque lot']
-    VESTUARIO_COMPRAS_PESSOAIS = []
-    IMPOSTOS_TAXAS = ['deb iof', 'deb juros']
-    SERVICOS_ASSINATURAS = ['db t cesta', 'fone']
-    OUTROS_DEBITOS = ['envio pix']
 
     def __init__(self, file_path, password_list=None):
         super().__init__(file_path, password_list)
+        self.load_category_definitions('Caixa')
         if self.text != "":
             self.extract_data()
             if self.data != []:
