@@ -13,14 +13,23 @@ class Parser(ABC):
 
     def __init__(self, file_path, password_list=None):
         self.file_path = file_path
-        self.password_list = password_list if password_list else [] 
+        self.base_directory = os.path.dirname(file_path)  # Base directory from file path
+        self.password_list = password_list if password_list else []
         self.logger = logging.getLogger(self.__class__.__name__)
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        
+        # PDF Extraction
         self.pdf_extractor = PDFExtractor(file_path, self.password_list)
         self.text = self.pdf_extractor.extract_text()
-        os.makedirs("resultados", exist_ok=True)
-        output_path = os.path.join("resultados", os.path.basename(file_path.lower()).replace(".pdf", "_texto_extraido.txt"))
+        
+        # Define 'resultados' path within base directory
+        resultados_path = os.path.join(self.base_directory, "resultados")
+        os.makedirs(resultados_path, exist_ok=True)
+        
+        # Save extracted text to 'resultados' folder
+        output_path = os.path.join(resultados_path, os.path.basename(file_path.lower()).replace(".pdf", "_texto_extraido.txt"))
         self.pdf_extractor.save_text_to_file(output_path)
+        
         self.receitas_definitions = {}
         self.custos_definitions = {}
 
@@ -31,21 +40,22 @@ class Parser(ABC):
         """
         pass
 
-    def load_category_definitions(self, bank_name, file_path="categorias_definicoes.xlsx"):
+    def load_category_definitions(self, bank_name):
         """
-        Loads category definitions from an Excel file into separate dictionaries for "receitas" and "custos".
+        Loads category definitions from an Excel file located in the base directory into separate dictionaries 
+        for "receitas" and "custos".
 
         Args:
         - bank_name (str): Name of the bank (e.g., 'Inter', 'Itau', etc.)
-        - file_path (str): Path to the Excel file containing category definitions. Default is "categorias_definicoes.xlsx".
         """
+        category_file_path = os.path.join(self.base_directory, "categorias_definicoes.xlsx")
         try:
             receitas_sheet = f"{bank_name}_receitas"
             custos_sheet = f"{bank_name}_custos"
             
             # Load receitas and custos sheets into separate dictionaries
-            receitas_df = pd.read_excel(file_path, sheet_name=receitas_sheet)
-            custos_df = pd.read_excel(file_path, sheet_name=custos_sheet)
+            receitas_df = pd.read_excel(category_file_path, sheet_name=receitas_sheet)
+            custos_df = pd.read_excel(category_file_path, sheet_name=custos_sheet)
 
             # Fill receitas definitions
             for category in receitas_df.columns:
@@ -60,11 +70,10 @@ class Parser(ABC):
         except Exception as e:
             self.logger.error(f"Error loading category definitions for '{bank_name}': {e}")
 
-
     def save_transformed_dataframe(self, dataframe: pd.DataFrame):
-        directory = "transformed_dataframe"
+        directory = os.path.join(self.base_directory, "transformed_dataframe")
         file_path = os.path.join(directory, "transformed_dataframe.csv")
-
+        
         os.makedirs(directory, exist_ok=True)
         
         if os.path.exists(file_path):
@@ -84,7 +93,7 @@ class Parser(ABC):
                 return category
         return 'Outros'
     
-    def transform_to_dataframe(self, origem:str):
+    def transform_to_dataframe(self, origem: str):
         df = pd.DataFrame(self.data)
         df.rename(columns={
             'data_transacao': 'data_transacao',
