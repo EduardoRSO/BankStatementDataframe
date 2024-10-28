@@ -1,48 +1,80 @@
-# BankStatementParser
+BankStatementParser
+BankStatementParser é uma ferramenta em Python projetada para processar extratos bancários em PDF, extraindo e classificando dados transacionais. Esses dados são convertidos para um DataFrame, permitindo integração com Power BI para análise financeira.
 
-**BankStatementParser** é uma ferramenta em Python projetada para extrair dados de extratos bancários em formato PDF e convertê-los em um DataFrame. Esse DataFrame pode ser utilizado para gerar dashboards e facilitar a análise financeira de maneira automatizada.
+Funcionalidades
+Suporte para os seguintes bancos:
+Caixa, Bradesco, Carrefour, Itaú e Inter
+Classificação das transações em Receitas e Custos, com categorias específicas para cada banco.
+Extração, limpeza e transformação dos dados, com geração de arquivos prontos para visualização.
+Carregamento dinâmico de categorias a partir de um arquivo Excel externo (categorias_definicoes.xlsx).
+Testes unitários para verificação de funcionalidades essenciais.
+Configuração do Power BI
+O projeto não inclui o arquivo do Power BI, mas você pode configurar uma Visualização de Matriz com a seguinte hierarquia para análise dos dados:
 
-## Funcionalidades
+Hierarquia: tipo > categoria > origem > descricao
+Campo de valor: net, representando o saldo de transações
+Essa visualização permite explorar as transações de forma hierárquica, facilitando a análise de receitas e despesas.
 
-- Suporte para extratos bancários dos seguintes formatos:
-  - Caixa
-  - Bradesco
-  - Carrefour
-  - Itaú
-- Extração de dados dos PDFs de forma eficiente.
-- Limpeza e tratamento dos dados extraídos para garantir consistência.
-- Processamento dos dados em um DataFrame pronto para ser integrado em dashboards.
-- Suporte para testes unitários.
+Requisitos e Configuração do Ambiente
+Estrutura de Pastas
+O projeto espera uma pasta contendo:
 
-## Estrutura do Projeto
+Arquivos PDF dos extratos bancários a serem processados.
+Um arquivo passwords.txt com senhas para desbloqueio dos PDFs, se necessário.
+O arquivo categorias_definicoes.xlsx, que contém as definições de categorias para cada banco.
+Esses arquivos devem estar no diretório especificado ao rodar o script.
 
-```bash
+Criação e Ativação do Ambiente Virtual
+Para configurar o ambiente:
+
+Crie e ative um ambiente virtual:
+
+bash
+Copiar código
+python -m venv venv
+
+Ative o ambiente
+No Windows
+venv\Scripts\activate
+No macOS/Linux
+source venv/bin/activate
+Instale as dependências listadas no requirements.txt:
+
+bash
+Copiar código
+pip install -r requirements.txt
+Como Executar
+Para processar os arquivos PDF, execute o seguinte comando, passando o diretório onde estão os arquivos:
+
+bash
+Copiar código
+python main.py <caminho_para_a_pasta>
+Nota: O <caminho_para_a_pasta> deve incluir o passwords.txt e o categorias_definicoes.xlsx.
+
+Estrutura do Projeto
+bash
+Copiar código
 BankStatementParser/
 │
-├── README.md                # Descrição geral do projeto
-├── requirements.txt          # Lista de dependências
-├── setup.py                  # Script para instalação do pacote
-├── .gitignore                # Arquivos e pastas para ignorar no Git
+├── README.md                   # Descrição do projeto
+├── requirements.txt            # Dependências do projeto
+├── setup.py                    # Script de instalação
+├── .gitignore                  # Arquivos ignorados pelo Git
 │
-├── bank_statement_parser/    # Diretório principal do projeto
-│   ├── __init__.py           # Inicialização do módulo Python
-│   ├── parser.py             # Módulo principal para parsing de PDFs
-│   ├── formats/              # Diretório contendo as classes para diferentes formatos de extratos
-│   │   ├── __init__.py
-│   │   ├── caixa.py          # Parser específico para o formato de extrato da Caixa
-│   │   ├── bradesco.py       # Parser específico para o formato de extrato do Bradesco
-│   │   ├── carrefour.py      # Parser específico para o formato de extrato do Carrefour
-│   │   └── itau.py           # Parser específico para o formato de extrato do Itaú
+├── bank_statement_parser/      # Diretório principal do projeto
+│   ├── __init__.py             
+│   ├── formats/                # Parsers específicos para cada banco
+│   │   ├── caixa.py            
+│   │   ├── bradesco.py         
+│   │   ├── carrefour.py        
+│   │   ├── itau.py             
+│   │   └── inter.py            
 │   │
-│   └── utils/                # Diretório para utilidades de extração, limpeza e processamento
-│       ├── __init__.py
-│       ├── pdf_extractor.py  # Funções para extração de dados dos PDFs
-│       ├── data_cleaner.py   # Funções para limpeza e tratamento dos dados extraídos
-│       └── dataframe_processor.py  # Funções para processamento e geração do DataFrame final
+│   └── utils/                  # Ferramentas de extração e processamento
+│       ├── pdf_extractor.py    # Funções para extração de PDFs
+│       └── data_cleaner.py     # Funções de limpeza de dados
 │
-└── tests/                    # Diretório para os testes unitários
-    ├── __init__.py
-    ├── test_parser.py        # Testes para o parser principal
-    └── test_utils.py         # Testes para as utilidades (extração, limpeza, processamento)
-```
-
+└── tests/                      # Testes unitários
+    ├── test_parser.py          
+    └── test_utils.py           
+Com essas instruções, você pode configurar e executar o projeto para automatizar a análise dos extratos bancários em PDF.
