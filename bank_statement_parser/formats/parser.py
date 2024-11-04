@@ -52,19 +52,12 @@ class Parser(ABC):
         try:
             receitas_sheet = f"{bank_name}_receitas"
             custos_sheet = f"{bank_name}_custos"
-            
-            # Load receitas and custos sheets into separate dictionaries
             receitas_df = pd.read_excel(category_file_path, sheet_name=receitas_sheet)
             custos_df = pd.read_excel(category_file_path, sheet_name=custos_sheet)
-
-            # Fill receitas definitions
             for category in receitas_df.columns:
                 self.receitas_definitions[category] = receitas_df[category].dropna().tolist()
-
-            # Fill custos definitions
             for category in custos_df.columns:
                 self.custos_definitions[category] = custos_df[category].dropna().tolist()
-
             self.logger.info(f"Category definitions loaded for '{bank_name}' from sheets '{receitas_sheet}' and '{custos_sheet}'")
         
         except Exception as e:
