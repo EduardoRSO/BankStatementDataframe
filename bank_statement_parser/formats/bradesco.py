@@ -15,7 +15,7 @@ class BradescoParser(Parser):
                 if not self.transformed_data.empty:
                     self.save_transformed_dataframe(self.transformed_data)
 
-
+    @Parser.exception_handler
     def extract_data(self):
         stop_conditions = [r"Data Histórico Docto\. Crédito \(R\$\) Débito \(R\$\) Saldo \(R\$\)", r"Data: ", r"Total \d*\.*\d+,\d+ \d*\.*\d+,\d+"]
         self.data = []
