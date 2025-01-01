@@ -4,12 +4,17 @@ import regex as re
 import pandas as pd
 from abc import ABC, abstractmethod
 from bank_statement_parser.utils.pdf_extractor import PDFExtractor
+from bank_statement_parser.utils.exception_handler import exception_handler_decorator
 
 class Parser(ABC):
     """
     Classe abstrata base para os parsers de extratos bancários.
     Define a interface comum para os métodos de extração de dados.
     """
+
+    @classmethod
+    def exception_handler(cls, func):
+        return exception_handler_decorator(func)
 
     def __init__(self, file_path, password_list=None):
         self.file_path = file_path
@@ -63,6 +68,26 @@ class Parser(ABC):
         except Exception as e:
             self.logger.error(f"Error loading category definitions for '{bank_name}': {e}")
 
+    def merge_future_transactions(self, dataframe: pd.DataFrame):
+        try:
+            # Define o caminho do arquivo Excel
+            file_path = os.path.join(self.base_directory, "categorias_definicoes.xlsx")
+
+            # Lê as abas 'Entradas_futuras' e 'Saidas_futuras'
+            entradas_futuras_df = pd.read_excel(file_path, sheet_name='Entradas_futuras', dtype=str)
+            saidas_futuras_df = pd.read_excel(file_path, sheet_name='Saidas_futuras', dtype=str)
+            entradas_futuras_df['data_transacao'] = pd.to_datetime(entradas_futuras_df['data_transacao'], errors='coerce').dt.strftime('%d/%m/%Y')
+            saidas_futuras_df['data_transacao'] = pd.to_datetime(saidas_futuras_df['data_transacao'], errors='coerce').dt.strftime('%d/%m/%Y')
+
+            # Combina as transações futuras com o DataFrame atual
+            combined_df = pd.concat([dataframe, entradas_futuras_df, saidas_futuras_df]).reset_index(drop=True)
+            self.logger.info("Transações futuras combinadas com sucesso.")
+
+            return combined_df
+        except Exception as e:
+            self.logger.error(f"Erro ao combinar transações futuras: {e}")
+            return dataframe
+
     def save_transformed_dataframe(self, dataframe: pd.DataFrame):
         directory = os.path.join(self.base_directory, "transformed_dataframe")
         file_path = os.path.join(directory, "transformed_dataframe.csv")
@@ -74,6 +99,10 @@ class Parser(ABC):
             combined_df = pd.concat([existing_df, dataframe]).drop_duplicates().reset_index(drop=True)
         else:
             combined_df = dataframe.drop_duplicates().reset_index(drop=True)
+
+        # Chama a função para combinar com transações futuras
+        combined_df = self.merge_future_transactions(combined_df)
+
         combined_df['descricao_transacao'] = combined_df['descricao_transacao'].str.lower()
         combined_df.to_csv(file_path, index=False)
         self.logger.info(f"Dataframe saved to {file_path}, with duplicates removed.")
